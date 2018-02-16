@@ -6,7 +6,7 @@ module_name = "pmacparser"
 
 
 def get_version():
-    """Extracts the version number from the version.py file."""
+    """Extract the version number from the version.py file."""
     VERSION_FILE = os.path.join(module_name, 'version.py')
     txt = open(VERSION_FILE).read()
     mo = re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', txt, re.M)

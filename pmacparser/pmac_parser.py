@@ -5,7 +5,9 @@ from pmacparser.pmac_lexer import PmacLexer
 
 
 class ParserError(Exception):
+
     """Parser error exception."""
+
     def __init__(self, message, token):
         super(ParserError, self).__init__()
         self.message = message
@@ -16,59 +18,75 @@ class ParserError(Exception):
 
 
 class Variables(object):
-    """ Represents a PMAC Variable (I, M, P, Q) """
+
+    """ Represents a PMAC Variable (I, M, P, Q)."""
+
     def __init__(self):
         self.variable_dict = {}
 
     def get_i_variable(self, var_num):
+        """Return the value of the specified I variable."""
         return self.get_var('I', var_num)
 
     def get_p_variable(self, var_num):
+        """Return the value of the specified P variable."""
         return self.get_var('P', var_num)
 
     def get_q_variable(self, var_num):
+        """Return the value of the specified Q variable."""
         return self.get_var('Q', var_num)
 
     def get_m_variable(self, var_num):
+        """Return the value of the specified M variable."""
         return self.get_var('M', var_num)
 
     def set_i_variable(self, var_num, value):
+        """Set the value of the specified I variable."""
         self.set_var('I', var_num, value)
 
     def set_p_variable(self, var_num, value):
+        """Set the value of the specified P variable."""
         self.set_var('P', var_num, value)
 
     def set_q_variable(self, var_num, value):
+        """Set the value of the specified Q variable."""
         self.set_var('Q', var_num, value)
 
     def set_m_variable(self, var_num, value):
+        """Set the value of the specified M variable."""
         self.set_var('M', var_num, value)
 
-    def get_var(self, t, var_num):
-        addr = '%s%s' % (t, var_num)
+    def get_var(self, var_type, var_num):
+        """Return the value of the specified variable type and number."""
+        addr = '%s%s' % (var_type, var_num)
         if addr in self.variable_dict:
             result = float(self.variable_dict[addr])
         else:
             result = 0
         return result
 
-    def set_var(self, t, var_num, value):
-        addr = '%s%s' % (t, var_num)
+    def set_var(self, var_type, var_num, value):
+        """Set the value of the variable type and number with the value specified."""
+        addr = '%s%s' % (var_type, var_num)
         self.variable_dict[addr] = value
 
     def populate_with_dict(self, dictionary):
+        """Copy the input dictionary into the local variable dictionary."""
         self.variable_dict = dictionary.copy()
 
     def to_dict(self):
+        """Return the variables as a dictionary."""
         return self.variable_dict
 
 
 class PMACParser(object):
+
     """Uses the PMAC Lexer to tokenise a list of strings, and then parses the tokens,
     using an input dictionary or variables to evaluate the expressions in the code,
     populating a dictionary with the results of the program operations.
     It is a modification of the dls_pmacanalyse code developed by J Thompson.
     """
+
     def __init__(self, program_lines):
         self.lexer = PmacLexer()
         self.lines = program_lines
@@ -79,11 +97,8 @@ class PMACParser(object):
         self.while_dict = {}
         self.pre_process()
 
-    def tokens(self):
-        return self.lexer.tokens
-
     def pre_process(self):
-        """Evaluate and replace any Constants Expressions (e.g. 4800+17)"""
+        """Evaluate and replace any Constants Expressions (e.g. 4800+17)."""
         t = self.lexer.get_token()
         while t is not None:
             if t.type == Number.ConstantExpression:
@@ -132,7 +147,7 @@ class PMACParser(object):
         return self.variable_dict.to_dict()
 
     def parseM(self):
-        """Parse an M expression - typically an assignment"""
+        """Parse an M expression - typically an assignment."""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -147,7 +162,7 @@ class PMACParser(object):
             raise ParserError('Unexpected statement: M %s' % n, n)
 
     def parseI(self):
-        """Parse an I expression - typically an assignment"""
+        """Parse an I expression - typically an assignment."""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -172,7 +187,7 @@ class PMACParser(object):
             raise ParserError('Unexpected statement: I %s' % n, n)
 
     def parseP(self):
-        """Parse a P expression - typically an assignment"""
+        """Parse a P expression - typically an assignment."""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -198,7 +213,7 @@ class PMACParser(object):
             # Do nothing
 
     def parseQ(self):
-        """Parse a Q expression - typically an assignment"""
+        """Parse a Q expression - typically an assignment."""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -224,7 +239,7 @@ class PMACParser(object):
             # Do nothing
 
     def parseCondition(self):
-        """Parse a condition, return the result of the condition"""
+        """Parse a condition, return the result of the condition."""
         has_parenthesis = True
         t = self.lexer.get_token()
         if t != '(':
@@ -268,7 +283,7 @@ class PMACParser(object):
         return result
 
     def parseConditionalOR(self, current_value):
-        """Parse a conditional OR token, return the result of the condition"""
+        """Parse a conditional OR token, return the result of the condition."""
         result = self.parseConditionalAND(current_value)
         t = self.lexer.get_token()
         if t == 'OR':
@@ -283,7 +298,7 @@ class PMACParser(object):
         return result
 
     def parseConditionalAND(self, current_value):
-        """Parse a conditional AND token, return the result of the condition"""
+        """Parse a conditional AND token, return the result of the condition."""
         t = self.lexer.get_token()
         if t == 'AND':
             result = self.parseCondition() and current_value
@@ -316,7 +331,7 @@ class PMACParser(object):
                 self.parseEndIf(t)
 
     def parseElse(self, t):
-        """Parse an ELSE token, skipping to ENDIF if necessary"""
+        """Parse an ELSE token, skipping to ENDIF if necessary."""
         if self.if_level > 0:
             this_if_level = self.if_level
             while t != 'ENDIF' or this_if_level != self.if_level:
@@ -330,15 +345,15 @@ class PMACParser(object):
         else:
             raise ParserError('Unexpected ELSE', t)
 
-    def parseEndIf(self,t):
-        """Parse an ENDIF token, closing off the current IF level"""
+    def parseEndIf(self, t):
+        """Parse an ENDIF token, closing off the current IF level."""
         if self.if_level > 0:
             self.if_level -= 1
         else:
             raise ParserError('Unexpected ENDIF', t)
 
     def parseWhile(self, t):
-        """Parse a WHILE token, skipping to the ENDWHILE the condition is false"""
+        """Parse a WHILE token, skipping to the ENDWHILE the condition is false."""
         self.while_level += 1
 
         # Get all tokens up to the ENDWHILE
@@ -381,7 +396,7 @@ class PMACParser(object):
             self.while_level -= 1
 
     def parseEndWhile(self, t):
-        """Parse an ENDWHILE statement, placing the tokens within the while back on to the list to be executed"""
+        """Parse an ENDWHILE statement, placing the tokens within the while back on to the list to be executed."""
         if self.while_level > 0:
 
             while_tokens = self.while_dict[self.while_level]
@@ -454,8 +469,9 @@ class PMACParser(object):
         return result
 
     def parseE3(self):
-        """Return the result of a sub-expression that is an I,P,Q or M variable or
-           a constant or a parenthesised expression, or a mathematical operation."""
+        """Return the result of a sub-expression that is an I,P,Q or M variable, or
+           a constant or a parenthesised expression, or a mathematical operation.
+        """
         t = self.lexer.get_token()
         if t == '(':
             result = self.parseExpression()

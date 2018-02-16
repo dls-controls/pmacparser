@@ -3,7 +3,9 @@ from pygments.token import Punctuation, Whitespace, Error, Operator, Keyword, Na
 
 
 class PmacToken(object):
-    """ Represents a PMAC token """
+
+    """Represents a PMAC token."""
+
     def __init__(self, text=None):
         self.line = ''
         self.text = ''
@@ -12,6 +14,7 @@ class PmacToken(object):
             self.text = text
 
     def set(self, text, line):
+        """Set the value and line number of the token."""
         self.text = text
         self.line = line
 
@@ -20,6 +23,7 @@ class PmacToken(object):
         return self.text.isdigit()
 
     def to_int(self):
+        """Return the token as an integer."""
         return int(self.text)
 
     def is_float(self):
@@ -27,8 +31,8 @@ class PmacToken(object):
         result = True
         if not self.is_int():
             result = True
-            for ch in self.text:
-                if ch not in '0123456789.':
+            for char in self.text:
+                if char not in '0123456789.':
                     result = False
         return result
 
@@ -43,17 +47,22 @@ class PmacToken(object):
         return result
 
     def __str__(self):
+        """Return the token as a string."""
         return self.text
 
     def __eq__(self, other):
+        """Check for equality."""
         return self.text == str(other)
 
     def __ne__(self, other):
+        """Check for inequality."""
         return self.text != str(other)
 
 
 class PmacLexer(RegexLexer):
-    """ Turn a list of strings into a PMAC Token list """
+
+    """Turn a list of strings into a PMAC Token list."""
+
     name = 'pmac'
     aliases = ['pmac']
 
@@ -87,7 +96,7 @@ class PmacLexer(RegexLexer):
     }
 
     def lex(self, source):
-        """Turn the source lines of code into the token list"""
+        """Turn the source lines of code into the token list."""
         self.line = 0
         self.lexed_tokens = []
         self.cur_token = 0
