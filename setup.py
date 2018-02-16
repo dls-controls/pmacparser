@@ -1,11 +1,12 @@
+import re
+import os
 from setuptools import setup, find_packages
 
 module_name = "pmacparser"
 
 
 def get_version():
-    """Extracts the version number from the version.py file.
-    """
+    """Extracts the version number from the version.py file."""
     VERSION_FILE = os.path.join(module_name, 'version.py')
     txt = open(VERSION_FILE).read()
     mo = re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', txt, re.M)
@@ -19,6 +20,7 @@ def get_version():
     else:
         raise RuntimeError('Unable to find version string in {0}.'
                            .format(VERSION_FILE))
+
 
 install_requires = ['pygments>=2']
 

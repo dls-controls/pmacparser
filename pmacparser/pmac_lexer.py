@@ -7,7 +7,6 @@ class PmacToken(object):
     def __init__(self, text=None):
         self.line = ''
         self.text = ''
-        self.compareFail = False
         self.type = ''
         if text is not None:
             self.text = text
@@ -15,17 +14,16 @@ class PmacToken(object):
     def set(self, text, line):
         self.text = text
         self.line = line
-        self.compareFail = False
 
     def is_int(self):
-        """Returns true if the token is an integer."""
+        """Return true if the token is an integer."""
         return self.text.isdigit()
 
     def to_int(self):
         return int(self.text)
 
     def is_float(self):
-        """Returns true if the token is a floating point number."""
+        """Return true if the token is a floating point number."""
         result = True
         if not self.is_int():
             result = True
@@ -35,6 +33,7 @@ class PmacToken(object):
         return result
 
     def to_float(self):
+        """Return the token as a floating point number."""
         if self.is_int():
             result = self.to_int()
         elif self.is_float():
@@ -54,7 +53,7 @@ class PmacToken(object):
 
 
 class PmacLexer(RegexLexer):
-    """ Turns a list of strings into a PMAC Token list """
+    """ Turn a list of strings into a PMAC Token list """
     name = 'pmac'
     aliases = ['pmac']
 
@@ -88,6 +87,7 @@ class PmacLexer(RegexLexer):
     }
 
     def lex(self, source):
+        """Turn the source lines of code into the token list"""
         self.line = 0
         self.lexed_tokens = []
         self.cur_token = 0
@@ -111,7 +111,7 @@ class PmacLexer(RegexLexer):
             self.token_list_length = len(self.lexed_tokens)
 
     def get_token(self, should_be=None):
-        """Returns the first token and removes it from the list."""
+        """Return the first token and removes it from the list."""
         result = None
         # Skip any newline tokens unless they are wanted
         while self.cur_token < self.token_list_length and self.lexed_tokens[self.cur_token] == '\n':
@@ -127,11 +127,14 @@ class PmacLexer(RegexLexer):
         return result
 
     def put_token(self, token):
+        """Put a token back onto the list"""
         if token is not None:
             self.cur_token -= 1
 
     def put_tokens(self, tokens):
+        """Put a  list of tokens back on to the list"""
         self.cur_token -= len(tokens)
 
     def reset(self):
+        """Reset the lexer back to the beginning of the list"""
         self.cur_token = 0

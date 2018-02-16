@@ -1,12 +1,13 @@
 from math import sqrt, sin, cos, tan, asin, acos, atan, atan2, exp, log, degrees, radians
 
 from pygments.token import Number
-from pmac_lexer import PmacLexer
+from pmacparser.pmac_lexer import PmacLexer
 
 
 class ParserError(Exception):
     """Parser error exception."""
     def __init__(self, message, token):
+        super(ParserError, self).__init__()
         self.message = message
         self.line = token.line
 
@@ -19,40 +20,40 @@ class Variables(object):
     def __init__(self):
         self.variable_dict = {}
 
-    def get_i_variable(self, n):
-        return self.get_var('I', n)
+    def get_i_variable(self, var_num):
+        return self.get_var('I', var_num)
 
-    def get_p_variable(self, n):
-        return self.get_var('P', n)
+    def get_p_variable(self, var_num):
+        return self.get_var('P', var_num)
 
-    def get_q_variable(self, n):
-        return self.get_var('Q', n)
+    def get_q_variable(self, var_num):
+        return self.get_var('Q', var_num)
 
-    def get_m_variable(self, n):
-        return self.get_var('M', n)
+    def get_m_variable(self, var_num):
+        return self.get_var('M', var_num)
 
-    def set_i_variable(self, n, value):
-        self.set_var('I', n, value)
+    def set_i_variable(self, var_num, value):
+        self.set_var('I', var_num, value)
 
-    def set_p_variable(self, n, value):
-        self.set_var('P', n, value)
+    def set_p_variable(self, var_num, value):
+        self.set_var('P', var_num, value)
 
-    def set_q_variable(self, n, value):
-        self.set_var('Q', n, value)
+    def set_q_variable(self, var_num, value):
+        self.set_var('Q', var_num, value)
 
-    def set_m_variable(self, n, value):
-        self.set_var('M', n, value)
+    def set_m_variable(self, var_num, value):
+        self.set_var('M', var_num, value)
 
-    def get_var(self, t, n):
-        addr = '%s%s' % (t, n)
+    def get_var(self, t, var_num):
+        addr = '%s%s' % (t, var_num)
         if addr in self.variable_dict:
             result = float(self.variable_dict[addr])
         else:
             result = 0
         return result
 
-    def set_var(self, t, n, value):
-        addr = '%s%s' % (t, n)
+    def set_var(self, t, var_num, value):
+        addr = '%s%s' % (t, var_num)
         self.variable_dict[addr] = value
 
     def populate_with_dict(self, dictionary):
@@ -100,9 +101,9 @@ class PMACParser(object):
         self.lexer.reset()
 
     def parse(self, variable_dict):
+        """Top level kinematic program parser."""
         self.variable_dict.populate_with_dict(variable_dict)
 
-        """Top level kinematic program parser."""
         t = self.lexer.get_token()
         while t is not None:
             if t == 'Q':
@@ -131,6 +132,7 @@ class PMACParser(object):
         return self.variable_dict.to_dict()
 
     def parseM(self):
+        """Parse an M expression - typically an assignment"""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -145,6 +147,7 @@ class PMACParser(object):
             raise ParserError('Unexpected statement: M %s' % n, n)
 
     def parseI(self):
+        """Parse an I expression - typically an assignment"""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -169,6 +172,7 @@ class PMACParser(object):
             raise ParserError('Unexpected statement: I %s' % n, n)
 
     def parseP(self):
+        """Parse a P expression - typically an assignment"""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -194,6 +198,7 @@ class PMACParser(object):
             # Do nothing
 
     def parseQ(self):
+        """Parse a Q expression - typically an assignment"""
         n = self.lexer.get_token()
         if n.is_int():
             n = n.to_int()
@@ -219,7 +224,7 @@ class PMACParser(object):
             # Do nothing
 
     def parseCondition(self):
-
+        """Parse a condition, return the result of the condition"""
         has_parenthesis = True
         t = self.lexer.get_token()
         if t != '(':
@@ -263,6 +268,7 @@ class PMACParser(object):
         return result
 
     def parseConditionalOR(self, current_value):
+        """Parse a conditional OR token, return the result of the condition"""
         result = self.parseConditionalAND(current_value)
         t = self.lexer.get_token()
         if t == 'OR':
@@ -277,6 +283,7 @@ class PMACParser(object):
         return result
 
     def parseConditionalAND(self, current_value):
+        """Parse a conditional AND token, return the result of the condition"""
         t = self.lexer.get_token()
         if t == 'AND':
             result = self.parseCondition() and current_value
@@ -286,7 +293,7 @@ class PMACParser(object):
         return result
 
     def parseIf(self):
-
+        """Parse an IF token, skipping to after the else necessary"""
         condition = self.parseCondition()
 
         condition = self.parseConditionalOR(condition)
@@ -309,6 +316,7 @@ class PMACParser(object):
                 self.parseEndIf(t)
 
     def parseElse(self, t):
+        """Parse an ELSE token, skipping to ENDIF if necessary"""
         if self.if_level > 0:
             this_if_level = self.if_level
             while t != 'ENDIF' or this_if_level != self.if_level:
@@ -322,14 +330,15 @@ class PMACParser(object):
         else:
             raise ParserError('Unexpected ELSE', t)
 
-    def parseEndIf(self,t ):
+    def parseEndIf(self,t):
+        """Parse an ENDIF token, closing off the current IF level"""
         if self.if_level > 0:
             self.if_level -= 1
         else:
             raise ParserError('Unexpected ENDIF', t)
 
     def parseWhile(self, t):
-
+        """Parse a WHILE token, skipping to the ENDWHILE the condition is false"""
         self.while_level += 1
 
         # Get all tokens up to the ENDWHILE
@@ -372,6 +381,7 @@ class PMACParser(object):
             self.while_level -= 1
 
     def parseEndWhile(self, t):
+        """Parse an ENDWHILE statement, placing the tokens within the while back on to the list to be executed"""
         if self.while_level > 0:
 
             while_tokens = self.while_dict[self.while_level]
@@ -384,15 +394,18 @@ class PMACParser(object):
             raise ParserError('Unexpected ENDWHILE', t)
 
     def parseExpression(self):
-        """Returns the result of the expression."""
+        """Return the result of the expression."""
         # Currently supports syntax of the form:
         #    <expression> ::= <e1> { <sumop> <e1> }
         #    <e1> ::= <e2> { <multop> <e2> }
         #    <e2> ::= [ <monop> ] <e3>
         #    <e3> ::= '(' <expression> ')' | <constant> | 'P'<integer> | 'Q'<integer> | 'I'<integer> | 'M' <integer>
+        #                  | <mathop><float>
         #    <sumop> ::= '+' | '-' | '|' | '^'
         #    <multop> ::= '*' | '/' | '%' | '&'
         #    <monop> ::= '+' | '-'
+        #    <mathop> ::= 'SIN' | 'COS' | 'TAB' | 'ASIN' | 'ACOS' | 'ATAN' | 'ATAN2'
+        #                  | 'SQRT' | 'ABS' | 'EXT' | 'IN' | 'LN'
         result = self.parseE1()
         going = True
         while going:
@@ -411,7 +424,7 @@ class PMACParser(object):
         return result
 
     def parseE1(self):
-        """Returns the result of a sub-expression containing multiplicative operands."""
+        """Return the result of a sub-expression containing multiplicative operands."""
         result = self.parseE2()
         going = True
         while going:
@@ -430,7 +443,7 @@ class PMACParser(object):
         return result
 
     def parseE2(self):
-        """Returns the result of a sub-expression containing monadic operands."""
+        """Return the result of a sub-expression containing monadic operands."""
         monop = self.lexer.get_token()
         if monop not in ['+', '-']:
             self.lexer.put_token(monop)
@@ -441,8 +454,8 @@ class PMACParser(object):
         return result
 
     def parseE3(self):
-        """Returns the result of a sub-expression that is an I,P,Q or M variable or
-           a constant or a parenthesised expression."""
+        """Return the result of a sub-expression that is an I,P,Q or M variable or
+           a constant or a parenthesised expression, or a mathematical operation."""
         t = self.lexer.get_token()
         if t == '(':
             result = self.parseExpression()
@@ -603,5 +616,3 @@ class PMACParser(object):
         else:
             result = t.to_float()
         return result
-
-
