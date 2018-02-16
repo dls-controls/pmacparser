@@ -52,12 +52,6 @@ class PmacToken(object):
     def __ne__(self, other):
         return self.text != str(other)
 
-    def __len__(self):
-        return len(self.text)
-
-    def lower(self):
-        return self.text.lower()
-
 
 class PmacLexer(RegexLexer):
     """ Turns a list of strings into a PMAC Token list """

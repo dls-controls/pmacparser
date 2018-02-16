@@ -1,7 +1,7 @@
 import unittest
 from math import sqrt, exp, log
 
-from pmacparser.pmac_parser import PMACParser
+from pmacparser.pmac_parser import PMACParser, ParserError
 
 
 class TestParser(unittest.TestCase):
@@ -1729,7 +1729,25 @@ class TestParser(unittest.TestCase):
 
         self.assertRaises(Exception, parser.parse, input_dict)
 
-    def test_float_expected_exception(self):
+    def test_unrecognised_token_exception(self):
+
+        lines = []
+        lines.append("Q1=5G+3")
+
+        self.assertRaises(Exception, PMACParser, lines)
+
+    def test_float_expected_error(self):
+
+        input_dict = {"Q1": 42}
+
+        lines = []
+        lines.append("IAND=Q1")
+
+        parser = PMACParser(lines)
+
+        self.assertRaises(ParserError, parser.parse, input_dict)
+
+    def test_unexpected_i_error(self):
 
         input_dict = {"Q1": 42}
 
@@ -1739,6 +1757,67 @@ class TestParser(unittest.TestCase):
         parser = PMACParser(lines)
 
         self.assertRaises(Exception, parser.parse, input_dict)
+
+    def test_bad_comparitor_error(self):
+
+        input_dict = {"Q1": 42}
+
+        lines = []
+        lines.append("IF(Q1COS44)")
+
+        parser = PMACParser(lines)
+
+        self.assertRaises(ParserError, parser.parse, input_dict)
+
+    def test_bad_unclosed_bracket_error(self):
+
+        input_dict = {"Q1": 42}
+
+        lines = []
+        lines.append("IF(Q1>44COS(3)")
+
+        parser = PMACParser(lines)
+
+        self.assertRaises(ParserError, parser.parse, input_dict)
+
+    def test_unexpected_endif_error(self):
+
+        input_dict = {"Q1": 42}
+
+        lines = []
+        lines.append("Q1=3")
+        lines.append("ENDIF")
+        lines.append("Q1=4")
+
+        parser = PMACParser(lines)
+
+        self.assertRaises(ParserError, parser.parse, input_dict)
+
+    def test_unexpected_else_error(self):
+
+        input_dict = {"Q1": 42}
+
+        lines = []
+        lines.append("Q1=3")
+        lines.append("ELSE")
+        lines.append("Q1=4")
+
+        parser = PMACParser(lines)
+
+        self.assertRaises(ParserError, parser.parse, input_dict)
+
+    def test_unexpected_endwhile_error(self):
+
+        input_dict = {"Q1": 42}
+
+        lines = []
+        lines.append("Q1=3")
+        lines.append("ENDWHILE")
+        lines.append("Q1=4")
+
+        parser = PMACParser(lines)
+
+        self.assertRaises(ParserError, parser.parse, input_dict)
 
 
     def test_multiple_runs(self):

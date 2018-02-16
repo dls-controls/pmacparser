@@ -65,7 +65,8 @@ class Variables(object):
 class PMACParser(object):
     """Uses the PMAC Lexer to tokenise a list of strings, and then parses the tokens,
     using an input dictionary or variables to evaluate the expressions in the code,
-    populating a dictionary with the results of the program operations
+    populating a dictionary with the results of the program operations.
+    It is a modification of the dls_pmacanalyse code developed by J Thompson.
     """
     def __init__(self, program_lines):
         self.lexer = PmacLexer()
