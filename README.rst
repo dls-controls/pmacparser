@@ -14,7 +14,7 @@ Documentation
 
 To use:
 
-from pmac_parser import PMACParser
+from pmacparser.pmac_parser import PMACParser
 
 code_lines = ["Q1=(P(4800+1)*P1+P(4900+1))", "Q5=(P(4800+2)*P2+P(4900+2))"]
 

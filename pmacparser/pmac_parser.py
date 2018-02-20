@@ -1,3 +1,6 @@
+# PMAC Parser
+# Library for parsing and running PMAC programs
+
 from math import sqrt, sin, cos, tan, asin, acos, atan, atan2, exp, log, degrees, radians
 
 from pygments.token import Number
@@ -19,7 +22,7 @@ class ParserError(Exception):
 
 class Variables(object):
 
-    """ Represents a PMAC Variable (I, M, P, Q)."""
+    """Represents a PMAC Variable (I, M, P, Q)."""
 
     def __init__(self):
         self.variable_dict = {}
@@ -81,7 +84,9 @@ class Variables(object):
 
 class PMACParser(object):
 
-    """Uses the PMAC Lexer to tokenise a list of strings, and then parses the tokens,
+    """Parses a PMAC program, and runs an emulator for forward kinematic programs
+
+    Uses the PMAC Lexer to tokenise a list of strings, and then parses the tokens,
     using an input dictionary or variables to evaluate the expressions in the code,
     populating a dictionary with the results of the program operations.
     It is a modification of the dls_pmacanalyse code developed by J Thompson.
@@ -99,157 +104,156 @@ class PMACParser(object):
 
     def pre_process(self):
         """Evaluate and replace any Constants Expressions (e.g. 4800+17)."""
-        t = self.lexer.get_token()
-        while t is not None:
-            if t.type == Number.ConstantExpression:
-                token_text = str(t)
+        token = self.lexer.get_token()
+        while token is not None:
+            if token.type == Number.ConstantExpression:
+                token_text = str(token)
                 token_text = token_text.replace("(", "")
                 token_text = token_text.replace(")", "")
                 tokens = token_text.split("+")
                 int1 = int(tokens[0])
                 int2 = int(tokens[1])
                 val = int1 + int2
-                t.set(str(val), t.line)
-                t.type = Number
+                token.set(str(val), token.line)
+                token.type = Number
 
-            t = self.lexer.get_token()
+            token = self.lexer.get_token()
         self.lexer.reset()
 
     def parse(self, variable_dict):
         """Top level kinematic program parser."""
         self.variable_dict.populate_with_dict(variable_dict)
 
-        t = self.lexer.get_token()
-        while t is not None:
-            if t == 'Q':
+        token = self.lexer.get_token()
+        while token is not None:
+            if token == 'Q':
                 self.parseQ()
-            elif t == 'P':
+            elif token == 'P':
                 self.parseP()
-            elif t == 'I':
+            elif token == 'I':
                 self.parseI()
-            elif t == 'M':
+            elif token == 'M':
                 self.parseM()
-            elif t == 'IF':
+            elif token == 'IF':
                 self.parseIf()
-            elif t == 'ELSE':
-                self.parseElse(t)
-            elif t == 'ENDIF':
-                self.parseEndIf(t)
-            elif t == 'WHILE':
-                self.parseWhile(t)
-            elif t == 'ENDWHILE':
-                self.parseEndWhile(t)
+            elif token == 'ELSE':
+                self.parseElse(token)
+            elif token == 'ENDIF':
+                self.parseEndIf(token)
+            elif token == 'WHILE':
+                self.parseWhile(token)
+            elif token == 'ENDWHILE':
+                self.parseEndWhile(token)
             else:
-                raise ParserError('Unexpected token: %s' % t, t)
-            t = self.lexer.get_token()
+                raise ParserError('Unexpected token: %s' % token, token)
+            token = self.lexer.get_token()
 
         self.lexer.reset()
         return self.variable_dict.to_dict()
 
     def parseM(self):
         """Parse an M expression - typically an assignment."""
-        n = self.lexer.get_token()
-        if n.is_int():
-            n = n.to_int()
+        num = self.lexer.get_token()
+        if num.is_int():
+            num = num.to_int()
             t = self.lexer.get_token()
             if t == '=':
                 val = self.parseExpression()
-                self.variable_dict.set_m_variable(n, val)
+                self.variable_dict.set_m_variable(num, val)
             else:
                 self.lexer.put_token(t)
                 # Report M variable values (do nothing)
         else:
-            raise ParserError('Unexpected statement: M %s' % n, n)
+            raise ParserError('Unexpected statement: M %s' % num, num)
 
     def parseI(self):
         """Parse an I expression - typically an assignment."""
-        n = self.lexer.get_token()
-        if n.is_int():
-            n = n.to_int()
-            t = self.lexer.get_token()
-            if t == '=':
+        num = self.lexer.get_token()
+        if num.is_int():
+            num = num.to_int()
+            token = self.lexer.get_token()
+            if token == '=':
                 val = self.parseExpression()
-                self.variable_dict.set_i_variable(n, val)
+                self.variable_dict.set_i_variable(num, val)
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 # Report I variable values (do nothing)
-        elif n == '(':
-            n = self.parseExpression()
-            t = self.lexer.get_token(')')
-            t = self.lexer.get_token()
-            if t == '=':
+        elif num == '(':
+            num = self.parseExpression()
+            self.lexer.get_token(')')
+            token = self.lexer.get_token()
+            if token == '=':
                 val = self.parseExpression()
-                self.variable_dict.set_i_variable(n, val)
+                self.variable_dict.set_i_variable(num, val)
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 # Report I variable values (do nothing)
         else:
-            raise ParserError('Unexpected statement: I %s' % n, n)
+            raise ParserError('Unexpected statement: I %s' % num, num)
 
     def parseP(self):
         """Parse a P expression - typically an assignment."""
-        n = self.lexer.get_token()
-        if n.is_int():
-            n = n.to_int()
-            t = self.lexer.get_token()
-            if t == '=':
+        num = self.lexer.get_token()
+        if num.is_int():
+            num = num.to_int()
+            token = self.lexer.get_token()
+            if token == '=':
                 val = self.parseExpression()
-                self.variable_dict.set_p_variable(n, val)
+                self.variable_dict.set_p_variable(num, val)
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 # Report P variable values (do nothing)
-        elif n == '(':
-            n = self.parseExpression()
-            t = self.lexer.get_token(')')
-            t = self.lexer.get_token()
-            if t == '=':
+        elif num == '(':
+            num = self.parseExpression()
+            self.lexer.get_token(')')
+            token = self.lexer.get_token()
+            if token == '=':
                 val = self.parseExpression()
-                self.variable_dict.set_p_variable(n, val)
+                self.variable_dict.set_p_variable(num, val)
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 # Report P variable values (do nothing)
         else:
-            self.lexer.put_token(n)
+            self.lexer.put_token(num)
             # Do nothing
 
     def parseQ(self):
         """Parse a Q expression - typically an assignment."""
-        n = self.lexer.get_token()
-        if n.is_int():
-            n = n.to_int()
-            t = self.lexer.get_token()
-            if t == '=':
+        num = self.lexer.get_token()
+        if num.is_int():
+            num = num.to_int()
+            token = self.lexer.get_token()
+            if token == '=':
                 val = self.parseExpression()
-                self.variable_dict.set_q_variable(n, val)
+                self.variable_dict.set_q_variable(num, val)
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 # Report Q variable values (do nothing)
-        elif n == '(':
-            n = self.parseExpression()
-            t = self.lexer.get_token(')')
-            t = self.lexer.get_token()
-            if t == '=':
+        elif num == '(':
+            num = self.parseExpression()
+            self.lexer.get_token(')')
+            token = self.lexer.get_token()
+            if token == '=':
                 val = self.parseExpression()
-                self.variable_dict.set_q_variable(n, val)
+                self.variable_dict.set_q_variable(num, val)
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 # Report Q variable values (do nothing)
         else:
-            self.lexer.put_token(n)
+            self.lexer.put_token(num)
             # Do nothing
 
     def parseCondition(self):
         """Parse a condition, return the result of the condition."""
         has_parenthesis = True
-        t = self.lexer.get_token()
-        if t != '(':
-            self.lexer.put_token(t)
+        token = self.lexer.get_token()
+        if token != '(':
+            self.lexer.put_token(token)
             has_parenthesis = False
-            # raise ParserError('Expected (, got: %s' % t, t)
 
         value1 = self.parseExpression()
-        t = self.lexer.get_token()
-        comparator = t
+        token = self.lexer.get_token()
+        comparator = token
         value2 = self.parseExpression()
 
         if comparator == '=':
@@ -268,16 +272,16 @@ class PMACParser(object):
             raise ParserError('Expected comparator, got: %s' % comparator, comparator)
 
         # Take ) or AND or OR
-        t = self.lexer.get_token()
-        if t == 'AND' or t == 'OR':
-            self.lexer.put_token(t)
+        token = self.lexer.get_token()
+        if token == 'AND' or token == 'OR':
+            self.lexer.put_token(token)
             result = self.parseConditionalOR(result)
             if has_parenthesis:
-                t = self.lexer.get_token(')')
-        elif t == ')':
+                self.lexer.get_token(')')
+        elif token == ')':
             if not has_parenthesis:
-                self.lexer.put_token(t)
-        elif t != ')':
+                self.lexer.put_token(token)
+        elif token != ')':
             raise ParserError('Expected ) or AND/OR, got: %s' % comparator, comparator)
 
         return result
@@ -285,65 +289,62 @@ class PMACParser(object):
     def parseConditionalOR(self, current_value):
         """Parse a conditional OR token, return the result of the condition."""
         result = self.parseConditionalAND(current_value)
-        t = self.lexer.get_token()
-        if t == 'OR':
+        token = self.lexer.get_token()
+        if token == 'OR':
             condition_result = self.parseCondition()
             result = self.parseConditionalOR(condition_result) or current_value
-        elif t == 'AND':
-            self.lexer.put_token(t)
+        elif token == 'AND':
+            self.lexer.put_token(token)
             result = self.parseConditionalOR(result)
         else:
-            self.lexer.put_token(t)
+            self.lexer.put_token(token)
 
         return result
 
     def parseConditionalAND(self, current_value):
         """Parse a conditional AND token, return the result of the condition."""
-        t = self.lexer.get_token()
-        if t == 'AND':
+        token = self.lexer.get_token()
+        if token == 'AND':
             result = self.parseCondition() and current_value
         else:
-            self.lexer.put_token(t)
+            self.lexer.put_token(token)
             result = current_value
         return result
 
     def parseIf(self):
-        """Parse an IF token, skipping to after the else necessary"""
+        """Parse an IF token, skipping to after the else if necessary."""
         condition = self.parseCondition()
 
-        condition = self.parseConditionalOR(condition)
-
-        if_condition = condition
+        if_condition = self.parseConditionalOR(condition)
 
         self.if_level += 1
         if not if_condition:
             this_if_level = self.if_level
-            t = self.lexer.get_token()
-            while (t != 'ELSE' and t != 'ENDIF') or this_if_level != self.if_level:
-                if t == 'ENDIF':
+            token = self.lexer.get_token()
+            while (token != 'ELSE' and token != 'ENDIF') or this_if_level != self.if_level:
+                if token == 'ENDIF':
                     self.if_level -= 1
-                t = self.lexer.get_token()
-                if t == 'IF':
+                token = self.lexer.get_token()
+                if token == 'IF':
                     self.if_level += 1
-                    # self.lexer.putToken(t)
 
-            if t == 'ENDIF':
-                self.parseEndIf(t)
+            if token == 'ENDIF':
+                self.parseEndIf(token)
 
-    def parseElse(self, t):
+    def parseElse(self, token):
         """Parse an ELSE token, skipping to ENDIF if necessary."""
         if self.if_level > 0:
             this_if_level = self.if_level
-            while t != 'ENDIF' or this_if_level != self.if_level:
-                if t == 'ENDIF':
+            while token != 'ENDIF' or this_if_level != self.if_level:
+                if token == 'ENDIF':
                     self.if_level -= 1
 
-                t = self.lexer.get_token()
+                token = self.lexer.get_token()
 
-                if t == 'IF':
+                if token == 'IF':
                     self.if_level += 1
         else:
-            raise ParserError('Unexpected ELSE', t)
+            raise ParserError('Unexpected ELSE', token)
 
     def parseEndIf(self, t):
         """Parse an ENDIF token, closing off the current IF level."""
@@ -352,30 +353,30 @@ class PMACParser(object):
         else:
             raise ParserError('Unexpected ENDIF', t)
 
-    def parseWhile(self, t):
+    def parseWhile(self, token):
         """Parse a WHILE token, skipping to the ENDWHILE the condition is false."""
         self.while_level += 1
 
         # Get all tokens up to the ENDWHILE
         while_tokens = []
         this_while_level = self.while_level
-        while_tokens.append(t)
+        while_tokens.append(token)
 
-        while (t != 'ENDWHILE') or this_while_level != self.while_level:
-            if t == 'ENDWHILE':
+        while (token != 'ENDWHILE') or this_while_level != self.while_level:
+            if token == 'ENDWHILE':
                 self.while_level -= 1
 
-            t = self.lexer.get_token()
-            while_tokens.append(t)
+            token = self.lexer.get_token()
+            while_tokens.append(token)
 
-            if t == 'WHILE':
+            if token == 'WHILE':
                 self.while_level += 1
 
         # Put the tokens back on
         self.lexer.put_tokens(while_tokens)
 
         # Get the WHILE
-        t = self.lexer.get_token()
+        token = self.lexer.get_token()
 
         condition = self.parseCondition()
 
@@ -384,14 +385,14 @@ class PMACParser(object):
         if condition:
             self.while_dict[this_while_level] = while_tokens
         else:
-            while (t != 'ENDWHILE') or this_while_level != self.while_level:
-                if t == 'ENDWHILE':
+            while (token != 'ENDWHILE') or this_while_level != self.while_level:
+                if token == 'ENDWHILE':
                     self.while_level -= 1
 
-                t = self.lexer.get_token()
-                while_tokens.append(t)
+                token = self.lexer.get_token()
+                while_tokens.append(token)
 
-                if t == 'WHILE':
+                if token == 'WHILE':
                     self.while_level += 1
             self.while_level -= 1
 
@@ -424,17 +425,17 @@ class PMACParser(object):
         result = self.parseE1()
         going = True
         while going:
-            t = self.lexer.get_token()
-            if t == '+':
+            token = self.lexer.get_token()
+            if token == '+':
                 result = result + self.parseE1()
-            elif t == '-':
+            elif token == '-':
                 result = result - self.parseE1()
-            elif t == '|':
+            elif token == '|':
                 result = float(int(result) | int(self.parseE1()))
-            elif t == '^':
+            elif token == '^':
                 result = float(int(result) ^ int(self.parseE1()))
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 going = False
         return result
 
@@ -443,17 +444,17 @@ class PMACParser(object):
         result = self.parseE2()
         going = True
         while going:
-            t = self.lexer.get_token()
-            if t == '*':
+            token = self.lexer.get_token()
+            if token == '*':
                 result = result * self.parseE2()
-            elif t == '/':
+            elif token == '/':
                 result = result / self.parseE2()
-            elif t == '%':
+            elif token == '%':
                 result = result % self.parseE2()
-            elif t == '&':
+            elif token == '&':
                 result = float(int(result) & int(self.parseE2()))
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 going = False
         return result
 
@@ -469,118 +470,120 @@ class PMACParser(object):
         return result
 
     def parseE3(self):
-        """Return the result of a sub-expression that is an I,P,Q or M variable, or
-           a constant or a parenthesised expression, or a mathematical operation.
+        """Return the result of a sub-expression containing a value.
+
+        This could be an I,P,Q or M variable, or a constant or a
+        parenthesised expression, or a mathematical operation.
         """
-        t = self.lexer.get_token()
-        if t == '(':
+        token = self.lexer.get_token()
+        if token == '(':
             result = self.parseExpression()
-            t = self.lexer.get_token(')')
-        elif t == 'Q':
-            t = self.lexer.get_token()
-            if t == '(':
+            self.lexer.get_token(')')
+        elif token == 'Q':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = self.variable_dict.get_q_variable(value)
-        elif t == 'P':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'P':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = self.variable_dict.get_p_variable(value)
-        elif t == 'I':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'I':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = self.variable_dict.get_i_variable(value)
-        elif t == 'M':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'M':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = self.variable_dict.get_m_variable(value)
-        elif t == 'SIN':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'SIN':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
                 value = radians(value)
             result = sin(value)
-        elif t == 'COS':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'COS':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
                 value = radians(value)
             result = cos(value)
-        elif t == 'TAN':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'TAN':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
                 value = radians(value)
             result = tan(value)
-        elif t == 'ASIN':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'ASIN':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = asin(value)
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
                 result = degrees(result)
-        elif t == 'ACOS':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'ACOS':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = acos(value)
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
                 result = degrees(result)
-        elif t == 'ATAN':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'ATAN':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = atan(value)
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
                 result = degrees(result)
-        elif t == 'ATAN2':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'ATAN2':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
 
             # PMAC uses the value in Q0 as the cosine argument
             Q0 = self.variable_dict.get_q_variable(0)
@@ -589,46 +592,46 @@ class PMACParser(object):
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
                 result = degrees(result)
-        elif t == 'SQRT':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'SQRT':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = sqrt(value)
-        elif t == 'ABS':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'ABS':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = abs(value)
-        elif t == 'EXP':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'EXP':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = exp(value)
-        elif t == 'INT':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'INT':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = int(value)
-        elif t == 'LN':
-            t = self.lexer.get_token()
-            if t == '(':
+        elif token == 'LN':
+            token = self.lexer.get_token()
+            if token == '(':
                 value = self.parseExpression()
-                t = self.lexer.get_token(')')
+                self.lexer.get_token(')')
             else:
-                value = t
+                value = token
             result = log(value)
         else:
-            result = t.to_float()
+            result = token.to_float()
         return result
