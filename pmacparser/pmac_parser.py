@@ -3,6 +3,8 @@
 
 from math import sqrt, sin, cos, tan, asin, acos, atan, atan2, exp, log, degrees, radians
 
+import numpy as np
+
 from pygments.token import Number
 from pmacparser.pmac_lexer import PmacLexer
 
@@ -63,10 +65,11 @@ class Variables(object):
         """Return the value of the specified variable type and number."""
         addr = '%s%s' % (var_type, var_num)
         if addr in self.variable_dict:
-            result = float(self.variable_dict[addr])
+            result = self.variable_dict[addr]
         else:
             result = 0
-        return result
+        npvalue = np.array(result)
+        return npvalue.astype(float)
 
     def set_var(self, var_type, var_num, value):
         """Set the value of the variable type and number with the value specified."""
@@ -317,6 +320,14 @@ class PMACParser(object):
 
         if_condition = self.parseConditionalOR(condition)
 
+        # Condition could be numpy array, check and throw if not all True or all False
+        if np.all(if_condition):
+            if_condition = True
+        elif not np.any(if_condition):
+            if_condition = False
+        else:
+            raise Exception('If conditions is an array with not all the same value')
+
         self.if_level += 1
         if not if_condition:
             this_if_level = self.if_level
@@ -382,6 +393,14 @@ class PMACParser(object):
 
         condition = self.parseConditionalOR(condition)
 
+        # Condition could be numpy array, check and throw if not all True or all False
+        if np.all(condition):
+            condition = True
+        elif not np.any(condition):
+            condition = False
+        else:
+            raise Exception('While conditions is an array with not all the same value')
+
         if condition:
             self.while_dict[this_while_level] = while_tokens
         else:
@@ -431,9 +450,9 @@ class PMACParser(object):
             elif token == '-':
                 result = result - self.parseE1()
             elif token == '|':
-                result = float(int(result) | int(self.parseE1()))
+                result = np.bitwise_or(np.array(result).astype(int), np.array(self.parseE1()).astype(int))
             elif token == '^':
-                result = float(int(result) ^ int(self.parseE1()))
+                result = np.bitwise_xor(np.array(result).astype(int), np.array(self.parseE1()).astype(int))
             else:
                 self.lexer.put_token(token)
                 going = False
@@ -452,7 +471,7 @@ class PMACParser(object):
             elif token == '%':
                 result = result % self.parseE2()
             elif token == '&':
-                result = float(int(result) & int(self.parseE2()))
+                result = np.bitwise_and(np.array(result).astype(int), np.array(self.parseE2()).astype(int))
             else:
                 self.lexer.put_token(token)
                 going = False
@@ -520,8 +539,8 @@ class PMACParser(object):
                 value = token
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
-                value = radians(value)
-            result = sin(value)
+                value = np.radians(value)
+            result = np.sin(value)
         elif token == 'COS':
             token = self.lexer.get_token()
             if token == '(':
@@ -531,8 +550,8 @@ class PMACParser(object):
                 value = token
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
-                value = radians(value)
-            result = cos(value)
+                value = np.radians(value)
+            result = np.cos(value)
         elif token == 'TAN':
             token = self.lexer.get_token()
             if token == '(':
@@ -542,8 +561,8 @@ class PMACParser(object):
                 value = token
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
-                value = radians(value)
-            result = tan(value)
+                value = np.radians(value)
+            result = np.tan(value)
         elif token == 'ASIN':
             token = self.lexer.get_token()
             if token == '(':
@@ -551,10 +570,10 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = asin(value)
+            result = np.arcsin(value)
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
-                result = degrees(result)
+                result = np.degrees(result)
         elif token == 'ACOS':
             token = self.lexer.get_token()
             if token == '(':
@@ -562,10 +581,10 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = acos(value)
+            result = np.arccos(value)
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
-                result = degrees(result)
+                result = np.degrees(result)
         elif token == 'ATAN':
             token = self.lexer.get_token()
             if token == '(':
@@ -573,10 +592,10 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = atan(value)
+            result = np.arctan(value)
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
-                result = degrees(result)
+                result = np.degrees(result)
         elif token == 'ATAN2':
             token = self.lexer.get_token()
             if token == '(':
@@ -588,10 +607,10 @@ class PMACParser(object):
             # PMAC uses the value in Q0 as the cosine argument
             Q0 = self.variable_dict.get_q_variable(0)
 
-            result = atan2(value, Q0)
+            result = np.arctan2(value, Q0)
             I15 = self.variable_dict.get_i_variable(15)
             if I15 == 0:
-                result = degrees(result)
+                result = np.degrees(result)
         elif token == 'SQRT':
             token = self.lexer.get_token()
             if token == '(':
@@ -599,7 +618,7 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = sqrt(value)
+            result = np.sqrt(value)
         elif token == 'ABS':
             token = self.lexer.get_token()
             if token == '(':
@@ -607,7 +626,7 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = abs(value)
+            result = np.abs(value)
         elif token == 'EXP':
             token = self.lexer.get_token()
             if token == '(':
@@ -615,7 +634,7 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = exp(value)
+            result = np.exp(value)
         elif token == 'INT':
             token = self.lexer.get_token()
             if token == '(':
@@ -623,7 +642,7 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = int(value)
+            result = np.floor(value)
         elif token == 'LN':
             token = self.lexer.get_token()
             if token == '(':
@@ -631,7 +650,7 @@ class PMACParser(object):
                 self.lexer.get_token(')')
             else:
                 value = token
-            result = log(value)
+            result = np.log(value)
         else:
             result = token.to_float()
         return result
