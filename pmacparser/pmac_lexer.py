@@ -1,3 +1,8 @@
+"""PMAC Lexer
+
+Token class and lexer class for tokenising a PMAC program
+"""
+
 from pygments.lexer import RegexLexer
 from pygments.token import Punctuation, Whitespace, Error, Operator, Keyword, Name, Number
 
@@ -112,10 +117,10 @@ class PmacLexer(RegexLexer):
                 if pygment_token[0] == Error:
                     raise Exception("Unrecognised Token: %s", str(pygment_token[1]))
                 if pygment_token[0] != Whitespace:
-                    t = PmacToken()
-                    t.set(pygment_token[1], self.line)
-                    t.type = pygment_token[0]
-                    self.lexed_tokens.append(t)
+                    token = PmacToken()
+                    token.set(pygment_token[1], self.line)
+                    token.type = pygment_token[0]
+                    self.lexed_tokens.append(token)
 
             self.token_list_length = len(self.lexed_tokens)
 

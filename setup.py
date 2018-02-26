@@ -22,7 +22,7 @@ def get_version():
                            .format(VERSION_FILE))
 
 
-install_requires = ['pygments>=2']
+install_requires = ['numpy', 'pygments>=2']
 
 setup(
     name=module_name,

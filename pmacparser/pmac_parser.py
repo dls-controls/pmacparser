@@ -1,7 +1,7 @@
-# PMAC Parser
-# Library for parsing and running PMAC programs
+"""PMAC Parser
 
-from math import sqrt, sin, cos, tan, asin, acos, atan, atan2, exp, log, degrees, radians
+Library for parsing and running PMAC programs
+"""
 
 import numpy as np
 
@@ -159,12 +159,12 @@ class PMACParser(object):
         num = self.lexer.get_token()
         if num.is_int():
             num = num.to_int()
-            t = self.lexer.get_token()
-            if t == '=':
+            token = self.lexer.get_token()
+            if token == '=':
                 val = self.parseExpression()
                 self.variable_dict.set_m_variable(num, val)
             else:
-                self.lexer.put_token(t)
+                self.lexer.put_token(token)
                 # Report M variable values (do nothing)
         else:
             raise ParserError('Unexpected statement: M %s' % num, num)
