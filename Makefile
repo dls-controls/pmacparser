@@ -23,3 +23,10 @@ install: dist
 		--record=installed.files \
 		--prefix=$(PREFIX) dist/*.egg
 
+# Upload to pypi
+publish:
+	$(PYTHON) setup.py sdist upload -r pypi
+
+testpublish:
+	$(PYTHON) setup.py sdist upload -r pypitest
+
