@@ -10,3 +10,13 @@ script: nosetests tests/
 
 after_success:
     - coveralls
+
+deploy:
+  provider: pypi
+  user: dls_controls
+  password:
+    secure: e/3OlynHKWuaqOTUM2GpGguLIuzCqRDSx16cMg0no0snhNzDsScHbg1I5IKmJb4oDXGAbFGAO+HicJXlT6YXJRrpt2cGIyinKz8Oz6aPfRKD37uVwxcH+dQLfTMRtnDOb9s8L9opMbZoX/yecbO/e2XMG9DnEmMdFfzX+nBYgIKg5/5YEABJHMGAnRBb5Yl8+em+SSyf43j9mAmbLidlV0zuJ1H4wQ/HWkoQH59RCjnS3TGV157+GFA7MV/+3sfzgS2gZfVZ+kZzxI8BgCNhdgbsHHifbl38w0kBiMcBw3ZX0q+/IClxcQ3HSNV1Vghe0K4P/vvoNq0ipaOu741WgRmcxDpfImU/p1zCca8qxCniKz68cOi5EM1rhcu7QCSoqHrJxqIG0HtK80kGNLoBa71l3Gx7DMNsuFmzrHmbm8/lViBypoRydEEvxk5Lj1yo9zSSXyBYpNpDfFCiG4sKerUImarkJ3+nglHsgz+OGEGuCYmbPftf1f35FMcv65p2pP/67PUvnmHiB1szUg9NTC5T8bq/31Zmu1lZOj2byeHwZSO5XjjJyhcAH3Cg3dY6pDrtYZbePv48hBhhRketWC0TyU5/Az/WSQwARbNWMuJ6gEdcRvCHQgldTUOZhaBfsjOk/7A5n4QFzoCsPdG0zCC/1RpaCb+doQ1H8dAMFnI=
+  on:
+    tags: true
+    # As we are doing a source dist, only deploy for one python
+    python: "2.7"

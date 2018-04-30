@@ -23,11 +23,7 @@ install: dist
 		--record=installed.files \
 		--prefix=$(PREFIX) dist/*.egg
 
-# Upload to pypi. N.b. this needs to be run from a environemnt with twine installed
-publish:
-	$(PYTHON) setup.py sdist
-	twine upload --repository pypi dist/*
-
+# Upload to pypi test. N.b. this needs to be run from a environment with twine installed. Push to travis to publish.
 testpublish:
 	$(PYTHON) setup.py sdist
 	twine upload --repository pypitest dist/*
