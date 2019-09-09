@@ -141,12 +141,14 @@ class PMACParser(object):
                 self.parseIf()
             elif token == 'ELSE':
                 self.parseElse(token)
-            elif token == 'ENDIF':
+            elif token in ('ENDIF', 'ENDI'):
                 self.parseEndIf(token)
             elif token == 'WHILE':
                 self.parseWhile(token)
-            elif token == 'ENDWHILE':
+            elif token in ('ENDWHILE', 'ENDW'):
                 self.parseEndWhile(token)
+            elif token in ('RETURN', 'RET'):
+                self.parseReturn(token)
             else:
                 raise ParserError('Unexpected token: %s' % token, token)
             token = self.lexer.get_token()
@@ -332,22 +334,22 @@ class PMACParser(object):
         if not if_condition:
             this_if_level = self.if_level
             token = self.lexer.get_token()
-            while (token != 'ELSE' and token != 'ENDIF') or this_if_level != self.if_level:
-                if token == 'ENDIF':
+            while (token != 'ELSE' and token not in ('ENDIF', 'ENDI')) or this_if_level != self.if_level:
+                if token in ('ENDIF', 'ENDI'):
                     self.if_level -= 1
                 token = self.lexer.get_token()
                 if token == 'IF':
                     self.if_level += 1
 
-            if token == 'ENDIF':
+            if token in ('ENDIF', 'ENDI'):
                 self.parseEndIf(token)
 
     def parseElse(self, token):
         """Parse an ELSE token, skipping to ENDIF if necessary."""
         if self.if_level > 0:
             this_if_level = self.if_level
-            while token != 'ENDIF' or this_if_level != self.if_level:
-                if token == 'ENDIF':
+            while token not in ('ENDIF', 'ENDI') or this_if_level != self.if_level:
+                if token in ('ENDIF', 'ENDI'):
                     self.if_level -= 1
 
                 token = self.lexer.get_token()
@@ -362,7 +364,7 @@ class PMACParser(object):
         if self.if_level > 0:
             self.if_level -= 1
         else:
-            raise ParserError('Unexpected ENDIF', t)
+            raise ParserError('Unexpected ENDIF/ENDI', t)
 
     def parseWhile(self, token):
         """Parse a WHILE token, skipping to the ENDWHILE the condition is false."""
@@ -373,8 +375,8 @@ class PMACParser(object):
         this_while_level = self.while_level
         while_tokens.append(token)
 
-        while (token != 'ENDWHILE') or this_while_level != self.while_level:
-            if token == 'ENDWHILE':
+        while (token not in ('ENDWHILE', 'ENDW')) or this_while_level != self.while_level:
+            if token in ('ENDWHILE', 'ENDW'):
                 self.while_level -= 1
 
             token = self.lexer.get_token()
@@ -404,8 +406,8 @@ class PMACParser(object):
         if condition:
             self.while_dict[this_while_level] = while_tokens
         else:
-            while (token != 'ENDWHILE') or this_while_level != self.while_level:
-                if token == 'ENDWHILE':
+            while (token not in ('ENDWHILE', 'ENDW')) or this_while_level != self.while_level:
+                if token in ('ENDWHILE', 'ENDW'):
                     self.while_level -= 1
 
                 token = self.lexer.get_token()
@@ -426,7 +428,11 @@ class PMACParser(object):
 
             self.while_level -= 1
         else:
-            raise ParserError('Unexpected ENDWHILE', t)
+            raise ParserError('Unexpected ENDWHILE/ENDW', t)
+
+    def parseReturn(self, t):
+        """Parse a RETURN statement, which can just be ignored."""
+        pass
 
     def parseExpression(self):
         """Return the result of the expression."""

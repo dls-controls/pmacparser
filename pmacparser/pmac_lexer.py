@@ -82,8 +82,9 @@ class PmacLexer(RegexLexer):
     tokens = {
         'root': [
             (r'[ \n]', Whitespace),
-            (r'(IF|ELSE|ENDIF|WHILE|ENDWHILE|AND|OR)', Keyword.Conditional),
+            (r'(IF|ELSE|ENDIF|ENDI|WHILE|ENDWHILE|ENDW|AND|OR)', Keyword.Conditional),
             (r'(ABS|EXP|INT|LN|SIN|COS|TAN|ASIN|ACOS|ATAN2|ATAN|SQRT)', Keyword.Math),
+            (r'(RETURN|RET)', Keyword.Control),
             (r'P', Name.VariableP),
             (r'Q', Name.VariableQ),
             (r'I', Name.VariableI),
@@ -94,9 +95,10 @@ class PmacLexer(RegexLexer):
             (r'(!=)|(!<)|(!>)', Operator),
             (r'[-+/\\*=<>^|&%]', Operator),
             (r'[()]', Punctuation),
-            (r'(DISABLE PLC|DISABLE PLCC|DISPLAY|ENABLE PLC|ENABLE PLCC|LOCK|'
-             r'MACROAUXREAD|MACROAUXWRITE|MACROMSTREAD|MACROMSTWRITE|MACROSLVREAD|MACROSLVWRITE|'
-             r'PAUSE PLC|RESUME PLC|SETPHASE|UNLOCK)', Error.InvalidPLC),
+            (r'(DISABLE PLC|DIS PLC|DISABLE PLCC|DIS PLCC|DISPLAY|DISP|ENABLE PLC|'
+             r'ENA PLC|ENABLE PLCC|ENA PLCC|LOCK|MACROAUXREAD|MXR|MACROAUXWRITE|MXW|'
+             r'MACROMSTREAD|MMR|MACROMSTWRITE|MMW|MACROSLVREAD|MSR|MACROSLVWRITE|MSW|'
+             r'PAUSE PLC|PAU PLC|RESUME PLC|RES PLC|SETPHASE|UNLOCK)', Error.InvalidPLC),
         ]
     }
 

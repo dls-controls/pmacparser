@@ -718,6 +718,38 @@ class TestParser(unittest.TestCase):
         self.assertEqual(output_dict["I15"], 1)
         self.assertEqual(output_dict["Q0"], 2)
 
+    def test_return(self):
+        input_dict = {"P1": 42, "P2": 9}
+
+        lines = []
+        lines.append("Q1=P1+P2")
+        lines.append("RETURN")
+
+        parser = PMACParser(lines)
+
+        output_dict = parser.parse(input_dict)
+
+        self.assertEqual(len(output_dict), 3)
+        self.assertEqual(output_dict["P1"], 42)
+        self.assertEqual(output_dict["P2"], 9)
+        self.assertEqual(output_dict["Q1"], 51)
+
+    def test_ret(self):
+        input_dict = {"P1": 42, "P2": 9}
+
+        lines = []
+        lines.append("Q1=P1+P2")
+        lines.append("RET")
+
+        parser = PMACParser(lines)
+
+        output_dict = parser.parse(input_dict)
+
+        self.assertEqual(len(output_dict), 3)
+        self.assertEqual(output_dict["P1"], 42)
+        self.assertEqual(output_dict["P2"], 9)
+        self.assertEqual(output_dict["Q1"], 51)
+
     def test_multi_line(self):
 
         input_dict = {"P1": 42, "P2": 9}
@@ -745,6 +777,27 @@ class TestParser(unittest.TestCase):
         lines.append("IF(P1=42)")
         lines.append("P2=222")
         lines.append("ENDIF")
+        lines.append("Q2=2")
+
+        parser = PMACParser(lines)
+
+        output_dict = parser.parse(input_dict)
+
+        self.assertEqual(len(output_dict), 4)
+        self.assertEqual(output_dict["P1"], 42)
+        self.assertEqual(output_dict["P2"], 222)
+        self.assertEqual(output_dict["Q1"], 1)
+        self.assertEqual(output_dict["Q2"], 2)
+
+    def test_if_endi(self):
+
+        input_dict = {"P1": 42}
+
+        lines = []
+        lines.append("Q1=1")
+        lines.append("IF(P1=42)")
+        lines.append("P2=222")
+        lines.append("ENDI")
         lines.append("Q2=2")
 
         parser = PMACParser(lines)
@@ -1673,7 +1726,7 @@ class TestParser(unittest.TestCase):
         lines.append("P6=666")
         lines.append("ELSE")
         lines.append("P7=777")
-        lines.append("ENDIF")
+        lines.append("ENDI")
         # End of nested if
         lines.append("P5=555")
         lines.append("ENDIF")
@@ -1704,6 +1757,30 @@ class TestParser(unittest.TestCase):
         lines.append("P1=P1+1")
         lines.append("P2=P2+2")
         lines.append("ENDWHILE")
+        lines.append("Q2=Q2+1")
+
+        parser = PMACParser(lines)
+
+        output_dict = parser.parse(input_dict)
+
+        self.assertEqual(len(output_dict), 4)
+        self.assertEqual(output_dict["P1"], 10)
+        self.assertEqual(output_dict["P2"], 20)
+        self.assertEqual(output_dict["Q1"], 2)
+        self.assertEqual(output_dict["Q2"], 3)
+
+    def test_while_endw(self):
+
+        input_dict = {"P1": 1, "P2": 2}
+
+        lines = []
+        lines.append("Q1=1")
+        lines.append("Q2=2")
+        lines.append("Q1=Q1+1")
+        lines.append("WHILE(P1<10)")
+        lines.append("P1=P1+1")
+        lines.append("P2=P2+2")
+        lines.append("ENDW")
         lines.append("Q2=Q2+1")
 
         parser = PMACParser(lines)
@@ -2749,6 +2826,7 @@ class TestParser(unittest.TestCase):
         self.assertAlmostEqual(output_dict["Q134"][1], -2577.8183898685766)
         self.assertAlmostEqual(output_dict["Q3"][1], 0.9136837164306968)
         self.assertEqual(output_dict["Q8"][1], 526)
+
 
 if __name__ == "__main__":
     unittest.main(2)
