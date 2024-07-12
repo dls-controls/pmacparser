@@ -24,10 +24,10 @@ parser = PMACParser(code_lines)
 
 output_vars = parser.parse(input_vars)
 
-.. |Build Status| image:: https://api.travis-ci.org/dls-controls/pmacparser.svg
-    :target: https://travis-ci.org/dls-controls/pmacparser
-.. |Coverage Status| image:: https://coveralls.io/repos/github/dls-controls/pmacparser/badge.svg?branch=master
-    :target: https://coveralls.io/github/dls-controls/pmacparser?branch=master
-.. |Code Health| image:: https://landscape.io/github/dls-controls/pmacparser/master/landscape.svg?style=flat
-    :target: https://landscape.io/github/dls-controls/pmacparser/master
+.. |Build Status| image:: https://api.travis-ci.org/DiamondLightSource/pmacparser.svg
+    :target: https://travis-ci.org/DiamondLightSource/pmacparser
+.. |Coverage Status| image:: https://coveralls.io/repos/github/DiamondLightSource/pmacparser/badge.svg?branch=master
+    :target: https://coveralls.io/github/DiamondLightSource/pmacparser?branch=master
+.. |Code Health| image:: https://landscape.io/github/DiamondLightSource/pmacparser/master/landscape.svg?style=flat
+    :target: https://landscape.io/github/DiamondLightSource/pmacparser/master
 
