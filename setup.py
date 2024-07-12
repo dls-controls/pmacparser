@@ -29,7 +29,7 @@ setup(
     version=get_version(),
     description='PMAC parser and kinematics emulator',
     long_description=open("README.rst").read(),
-    url='https://github.com/dls-controls/pmacparser',
+    url='https://github.com/DiamondLightSource/pmacparser',
     author='Matt Taylor',
     author_email='matthew.taylor@diamond.ac.uk',
     keywords='',
